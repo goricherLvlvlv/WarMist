@@ -56,11 +56,61 @@ public class WallPositions : MonoBehaviour
 
         for (int i = 0; i < this.transform.childCount; ++i)
         {
+            Vector3 point_00_min, point_00_max;
+            Vector3 point_01_min, point_01_max;
+            Vector3 point_10_min, point_10_max;
+            Vector3 point_11_min, point_11_max;
+
             // 射线检测
-            DrawLine(walls[i].pos_00, i * 4);
-            DrawLine(walls[i].pos_01, i * 4 + 1);
-            DrawLine(walls[i].pos_10, i * 4 + 2);
-            DrawLine(walls[i].pos_11, i * 4 + 3);
+            bool res_00 = DrawLine(walls[i].pos_00, i * 4, out point_00_min, out point_00_max);
+            bool res_01 = DrawLine(walls[i].pos_01, i * 4 + 1, out point_01_min, out point_01_max);
+            bool res_10 = DrawLine(walls[i].pos_10, i * 4 + 2, out point_10_min, out point_10_max);
+            bool res_11 = DrawLine(walls[i].pos_11, i * 4 + 3, out point_11_min, out point_11_max);
+
+            #region LINE_EXTEND_JUDGE
+
+            if (res_00 && res_11)
+            {
+                // 都是true, 则都延长
+                line.SetPosition((i * 4) * 2 + 1, point_00_max);
+                line.SetPosition((i * 4 + 3) * 2 + 1, point_11_max);
+            }
+            else
+            {
+                // 一个是false, 一个是true
+                if (res_00)
+                {
+                    // res_00是true, 00画线, 但不延长
+                    line.SetPosition((i * 4) * 2 + 1, point_00_min);
+                }
+                else
+                {
+                    line.SetPosition((i * 4 + 3) * 2 + 1, point_11_min);
+                }
+            }
+
+            if (res_01 && res_10)
+            {
+                // 都是true, 则都延长
+                line.SetPosition((i * 4 + 1) * 2 + 1, point_01_max);
+                line.SetPosition((i * 4 + 2) * 2 + 1, point_10_max);
+            }
+            else
+            {
+                // 一个是false, 一个是true
+                if (res_01)
+                {
+                    // res_01是true, 01画线, 但不延长
+                    line.SetPosition((i * 4 + 1) * 2 + 1, point_01_min);
+                }
+                else
+                {
+                    line.SetPosition((i * 4 + 2) * 2 + 1, point_10_min);
+                }
+            }
+
+            #endregion
+
         }
 
         DrawLine(new Vector3(-10.75f, -6.0f, 0.0f), transform.childCount * 4);
@@ -104,6 +154,52 @@ public class WallPositions : MonoBehaviour
 
     #region FUNCTION::DRAW_LINE
 
+    bool DrawLine(Vector3 pos, int i, out Vector3 point_min, out Vector3 point_max)
+    {
+        Ray ray = new Ray(player.transform.position, pos - player.transform.position);
+        RaycastHit[] hits = Physics.RaycastAll(ray);
+
+        int min_index = 0;
+        float min_len = Mathf.Infinity;
+
+        int max_index = 0;
+        float max_len = 0.0f;
+
+        for (int index = 0; index < hits.Length; ++index)
+        {
+            var point = hits[index].point;
+            float cur_len = point.x * point.x + point.y * point.y;
+
+            // 如果当前长度小于最小长度
+            if (cur_len < min_len)
+            {
+                min_len = cur_len;
+                min_index = index;
+            }
+
+            if (cur_len > max_len)
+            {
+                max_len = cur_len;
+                max_index = index;
+            }
+        }
+
+        point_min = hits[min_index].point;
+        point_max = hits[max_index].point;
+
+        line.SetPosition(i * 2, player.transform.position);
+        // 本层if来判断是否应该画出线段
+        if (hits[min_index].point == pos)
+        {
+            return true;
+        }
+        else
+        {
+            line.SetPosition(i * 2 + 1, player.transform.position);
+            return false;
+        }
+    }
+
     void DrawLine(Vector3 pos, int i)
     {
         Ray ray = new Ray(player.transform.position, pos - player.transform.position);
@@ -135,40 +231,10 @@ public class WallPositions : MonoBehaviour
         }
 
         line.SetPosition(i * 2, player.transform.position);
+        // 本层if来判断是否应该画出线段
         if (hits[min_index].point == pos)
         {
-            line.SetPosition(i * 2 + 1, hits[max_index].point);
-        }
-        else
-        {
-            line.SetPosition(i * 2 + 1, player.transform.position);
-        }
-    }
-
-    void DrawLineByPosition(Vector3 pos, int i)
-    {
-        Ray ray = new Ray(player.transform.position, pos - player.transform.position);
-        RaycastHit[] hits = Physics.RaycastAll(ray);
-        int min_index = 0;
-        float min_len = Mathf.Infinity;
-
-        for (int index = 0; index < hits.Length; ++index)
-        {
-            var point = hits[index].point;
-            float cur_len = point.x * point.x + point.y * point.y;
-
-            // 如果当前长度小于最小长度
-            if (cur_len < min_len)
-            {
-                min_len = cur_len;
-                min_index = index;
-            }
-        }
-
-        line.SetPosition(i * 2, player.transform.position);
-        if (hits[min_index].transform.position == pos)
-        {
-            line.SetPosition(i * 2 + 1, pos);
+            line.SetPosition(i * 2 + 1, hits[min_index].point);
         }
         else
         {
