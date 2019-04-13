@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.PlayerLoop;
 using static UnityEngine.Mathf;
+using static System.Convert;
 
 public class WallPositions : MonoBehaviour
 {
@@ -67,45 +68,79 @@ public class WallPositions : MonoBehaviour
             bool res_10 = DrawLine(walls[i].pos_10, i * 4 + 2, out point_10_min, out point_10_max);
             bool res_11 = DrawLine(walls[i].pos_11, i * 4 + 3, out point_11_min, out point_11_max);
 
-            #region LINE_EXTEND_JUDGE
+            var trueCounts = ToInt32(res_00) + ToInt32(res_01) + ToInt32(res_10) + ToInt32(res_11);
+            
 
-            if (res_00 && res_11)
+            #region LINE_EXTEND_JUDGE_TRIPLE_TRUE
+
+            if (trueCounts == 3)
             {
-                // 都是true, 则都延长
-                line.SetPosition((i * 4) * 2 + 1, point_00_max);
-                line.SetPosition((i * 4 + 3) * 2 + 1, point_11_max);
+                if (res_00 && res_11)
+                {
+                    // 都是true, 则都延长
+                    line.SetPosition((i * 4) * 2 + 1, point_00_max);
+                    line.SetPosition((i * 4 + 3) * 2 + 1, point_11_max);
+                }
+                else
+                {
+                    // 一个是false, 一个是true
+                    if (res_00)
+                    {
+                        // res_00是true, 00画线, 但不延长
+                        line.SetPosition((i * 4) * 2 + 1, point_00_min);
+                    }
+                    else
+                    {
+                        line.SetPosition((i * 4 + 3) * 2 + 1, point_11_min);
+                    }
+                }
+
+                if (res_01 && res_10)
+                {
+                    // 都是true, 则都延长
+                    line.SetPosition((i * 4 + 1) * 2 + 1, point_01_max);
+                    line.SetPosition((i * 4 + 2) * 2 + 1, point_10_max);
+                }
+                else
+                {
+                    // 一个是false, 一个是true
+                    if (res_01)
+                    {
+                        // res_01是true, 01画线, 但不延长
+                        line.SetPosition((i * 4 + 1) * 2 + 1, point_01_min);
+                    }
+                    else
+                    {
+                        line.SetPosition((i * 4 + 2) * 2 + 1, point_10_min);
+                    }
+                }
+
             }
-            else
+
+            #endregion
+
+            #region LINE_EXTEND_JUDGE_DOUBLE_TRUE
+
+            else if (trueCounts <= 2)
             {
-                // 一个是false, 一个是true
                 if (res_00)
                 {
-                    // res_00是true, 00画线, 但不延长
-                    line.SetPosition((i * 4) * 2 + 1, point_00_min);
+                    line.SetPosition((i * 4) * 2 + 1, point_00_max);
                 }
-                else
-                {
-                    line.SetPosition((i * 4 + 3) * 2 + 1, point_11_min);
-                }
-            }
 
-            if (res_01 && res_10)
-            {
-                // 都是true, 则都延长
-                line.SetPosition((i * 4 + 1) * 2 + 1, point_01_max);
-                line.SetPosition((i * 4 + 2) * 2 + 1, point_10_max);
-            }
-            else
-            {
-                // 一个是false, 一个是true
                 if (res_01)
                 {
-                    // res_01是true, 01画线, 但不延长
-                    line.SetPosition((i * 4 + 1) * 2 + 1, point_01_min);
+                    line.SetPosition((i * 4 + 1) * 2 + 1, point_01_max);
                 }
-                else
+
+                if (res_10)
                 {
-                    line.SetPosition((i * 4 + 2) * 2 + 1, point_10_min);
+                    line.SetPosition((i * 4 + 2) * 2 + 1, point_10_max);
+                }
+
+                if (res_11)
+                {
+                    line.SetPosition((i * 4 + 3) * 2 + 1, point_11_max);
                 }
             }
 
