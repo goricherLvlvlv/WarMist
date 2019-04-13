@@ -5,10 +5,16 @@ using UnityEngine;
 using UnityEngine.Experimental.PlayerLoop;
 using static UnityEngine.Mathf;
 
-
-
 public class WallPositions : MonoBehaviour
 {
+    #region CONST_VALUE
+
+    public const int RECT_LINES = 4;
+    public const int TRIANGLE_LINES = 3;
+    public const int STRAIGHT_LINES = 2;
+
+    #endregion
+
     public LineRenderer line;
     public GameObject player;
 
@@ -18,7 +24,7 @@ public class WallPositions : MonoBehaviour
     void Start()
     {
         walls = new List<WallPos>();
-        line.positionCount = transform.childCount * 4 * 2 + 4 * 2;
+        line.positionCount = (transform.childCount + 1) * RECT_LINES * STRAIGHT_LINES;  // Walls的数量加上最外围的墙
         emptyVector3s = new Vector3[line.positionCount];
         for (int i = 0; i < emptyVector3s.Length; ++i)
         {
@@ -102,8 +108,12 @@ public class WallPositions : MonoBehaviour
     {
         Ray ray = new Ray(player.transform.position, pos - player.transform.position);
         RaycastHit[] hits = Physics.RaycastAll(ray);
+
         int min_index = 0;
         float min_len = Mathf.Infinity;
+
+        int max_index = 0;
+        float max_len = 0.0f;
 
         for (int index = 0; index < hits.Length; ++index)
         {
@@ -116,12 +126,18 @@ public class WallPositions : MonoBehaviour
                 min_len = cur_len;
                 min_index = index;
             }
+
+            if (cur_len > max_len)
+            {
+                max_len = cur_len;
+                max_index = index;
+            }
         }
 
         line.SetPosition(i * 2, player.transform.position);
         if (hits[min_index].point == pos)
         {
-            line.SetPosition(i * 2 + 1, pos);
+            line.SetPosition(i * 2 + 1, hits[max_index].point);
         }
         else
         {
