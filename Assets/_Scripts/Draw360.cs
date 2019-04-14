@@ -3,49 +3,56 @@ using System.Collections.Generic;
 using UnityEngine;
 using static UnityEngine.Mathf;
 
-public class Draw360 : MonoBehaviour
+namespace _Script
 {
-
-    private LineRenderer line;
-
-    public int lineCounts = 360;
-
-    void Start()
+    public class Draw360 : MonoBehaviour
     {
-        line = GetComponent<LineRenderer>();
-        line.positionCount = lineCounts * 2;
 
-    }
+        private LineRenderer line;
 
-    void Update()
-    {
-        for (int i = 0; i < lineCounts; ++i)
+        public int lineCounts = 360;
+
+        private void Start()
         {
-            float angle = i * 360.0f / lineCounts;
-            float radius = angle / 180.0f * PI;
-            Vector3 direction = new Vector3(Cos(radius), Sin(radius), 0.0f);
+            line = GetComponent<LineRenderer>();
+            line.positionCount = lineCounts * 2;
 
-            Ray ray = new Ray(this.transform.position, direction);
-            RaycastHit[] hits = Physics.RaycastAll(ray);
+        }
 
-            int min_index = 0;
-            float min_len = Mathf.Infinity;
-
-            for (int index = 0; index < hits.Length; ++index)
+        private void Update()
+        {
+            for (int i = 0; i < lineCounts; ++i)
             {
-                var point = hits[index].point;
-                float cur_len = point.x * point.x + point.y * point.y;
+                float angle = i * 360.0f / lineCounts;
+                float radius = angle / 180.0f * PI;
+                Vector3 direction = new Vector3(Cos(radius), Sin(radius), 0.0f);
 
-                // 如果当前长度小于最小长度
-                if (cur_len < min_len)
+                Ray ray = new Ray(this.transform.position, direction);
+                RaycastHit[] hits = Physics.RaycastAll(ray);
+
+                int min_index = 0;
+                float min_len = Mathf.Infinity;
+
+                for (int index = 0; index < hits.Length; ++index)
                 {
-                    min_len = cur_len;
-                    min_index = index;
-                }
-            }
+                    var point = hits[index].point;
+                    var x = point.x - transform.position.x;
+                    var y = point.y - transform.position.y;
+                    float cur_len = x * x + y * y;
 
-            line.SetPosition(i * 2, this.transform.position);
-            line.SetPosition(i * 2 + 1, hits[min_index].point);
+                    // 如果当前长度小于最小长度
+                    if (cur_len < min_len)
+                    {
+                        min_len = cur_len;
+                        min_index = index;
+                    }
+                }
+
+                line.SetPosition(i * 2, this.transform.position);
+                line.SetPosition(i * 2 + 1, hits[min_index].point);
+            }
         }
     }
+
 }
+
