@@ -12,14 +12,16 @@ public class DrawByRectangle : MonoBehaviour
     private const int STRAIGHT_LINES = 2;
 
     #endregion
-    
-    public GameObject walls;
-    public LineRenderer line;
 
+    public GameObject walls;
+    
+    private LineRenderer line;
     private List<WallPoints> wallPointsList;
     
     private void Start()
     {
+        line = this.GetComponent<LineRenderer>();
+        
         line.positionCount = (walls.transform.childCount + 1) * RECT_LINES * STRAIGHT_LINES;
         wallPointsList = new List<WallPoints>();
 
